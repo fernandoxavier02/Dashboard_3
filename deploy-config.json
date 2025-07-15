@@ -1,0 +1,48 @@
+{
+    "name": "dashboard-inteligente",
+    "description": "Dashboard Pessoal Inteligente com IA, Tr\u00e2nsito e Produtividade",
+    "version": "1.0.0",
+    "homepage": "https://meu-dashboard.com",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/usuario/dashboard-inteligente"
+    },
+    "deploy": {
+        "netlify": {
+            "build": {
+                "command": "echo 'No build needed'",
+                "publish": "."
+            },
+            "redirects": [
+                {
+                    "from": "/*",
+                    "to": "/index.html",
+                    "status": 200
+                }
+            ]
+        },
+        "vercel": {
+            "builds": [
+                {
+                    "src": "index.html",
+                    "use": "@vercel/static"
+                }
+            ],
+            "routes": [
+                {
+                    "src": "/(.*)",
+                    "dest": "/index.html"
+                }
+            ]
+        }
+    },
+    "domains": {
+        "suggestions": [
+            "meu-dashboard.com",
+            "dashboard-inteligente.com",
+            "painel-pessoal.com",
+            "smart-dashboard.com.br",
+            "minha-produtividade.com"
+        ]
+    }
+}

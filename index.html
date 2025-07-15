@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Pessoal Inteligente</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1><i class="fas fa-tachometer-alt"></i> Dashboard Pessoal Inteligente</h1>
+            <p>Seu assistente completo para organização e produtividade diária</p>
+            <div id="current-time"></div>
+        </header>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- Weather Widget -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-cloud-sun card-icon"></i>
+                    <h2 class="card-title">Clima Atual</h2>
+                </div>
+                <div class="weather-main">
+                    <div>
+                        <div class="weather-temp" id="temperature">--°C</div>
+                        <div id="weather-description">Carregando...</div>
+                        <div id="location">--</div>
+                    </div>
+                    <div class="weather-icon" id="weather-icon">
+                        <i class="fas fa-sun"></i>
+                    </div>
+                </div>
+                <div class="weather-details">
+                    <div class="weather-detail">
+                        <i class="fas fa-tint weather-detail-icon"></i>
+                        <span>Umidade: <span id="humidity">--%</span></span>
+                    </div>
+                    <div class="weather-detail">
+                        <i class="fas fa-wind weather-detail-icon"></i>
+                        <span>Vento: <span id="wind-speed">-- km/h</span></span>
+                    </div>
+                    <div class="weather-detail">
+                        <i class="fas fa-eye weather-detail-icon"></i>
+                        <span>Visibilidade: <span id="visibility">-- km</span></span>
+                    </div>
+                    <div class="weather-detail">
+                        <i class="fas fa-thermometer-half weather-detail-icon"></i>
+                        <span>Sensação: <span id="feels-like">--°C</span></span>
+                    </div>
+                </div>
+                <div id="weather-suggestions"></div>
+            </div>
+
+            <!-- News Feed -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-newspaper card-icon"></i>
+                    <h2 class="card-title">Notícias Atuais</h2>
+                </div>
+                <div id="news-feed">
+                    <div class="loading"></div>
+                    <p>Carregando notícias...</p>
+                </div>
+            </div>
+
+            <!-- Task Manager -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-tasks card-icon"></i>
+                    <h2 class="card-title">Gerenciador de Tarefas Avançado</h2>
+                    <div style="margin-left: auto; display: flex; gap: 5px;">
+                        <button id="filter-all" class="task-filter-btn active" onclick="filterTasks('all')">Todas</button>
+                        <button id="filter-pending" class="task-filter-btn" onclick="filterTasks('pending')">Pendentes</button>
+                        <button id="filter-completed" class="task-filter-btn" onclick="filterTasks('completed')">Concluídas</button>
+                    </div>
+                </div>
+                
+                <!-- Task Input with Categories -->
+                <div class="task-input-advanced">
+                    <div class="task-input-row">
+                        <input type="text" id="task-input" placeholder="Adicionar nova tarefa...">
+                        <select id="task-category">
+                            <option value="work">💼 Trabalho</option>
+                            <option value="personal">👤 Pessoal</option>
+                            <option value="health">🏥 Saúde</option>
+                            <option value="study">📚 Estudos</option>
+                            <option value="finance">💰 Finanças</option>
+                            <option value="home">🏠 Casa</option>
+                        </select>
+                        <select id="task-priority">
+                            <option value="low">🟢 Baixa</option>
+                            <option value="medium" selected>🟡 Média</option>
+                            <option value="high">🔴 Alta</option>
+                        </select>
+                    </div>
+                    <div class="task-input-row">
+                        <input type="date" id="task-due-date" title="Data limite">
+                        <input type="time" id="task-due-time" title="Horário limite">
+                        <button class="btn btn-primary" onclick="addTask()">
+                            <i class="fas fa-plus"></i> Adicionar
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Task Statistics -->
+                <div class="task-stats">
+                    <div class="task-stat-item">
+                        <span class="task-stat-number" id="tasks-high">0</span>
+                        <span class="task-stat-label">Alta Prioridade</span>
+                    </div>
+                    <div class="task-stat-item">
+                        <span class="task-stat-number" id="tasks-overdue">0</span>
+                        <span class="task-stat-label">Atrasadas</span>
+                    </div>
+                    <div class="task-stat-item">
+                        <span class="task-stat-number" id="tasks-today">0</span>
+                        <span class="task-stat-label">Para Hoje</span>
+                    </div>
+                    <div class="task-stat-item">
+                        <span class="task-stat-number" id="completion-rate">0%</span>
+                        <span class="task-stat-label">Taxa Conclusão</span>
+                    </div>
+                </div>
+                
+                <!-- Task List -->
+                <div id="task-list"></div>
+                
+                <!-- Progress and Summary -->
+                <div class="task-summary">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="task-progress" style="width: 0%"></div>
+                    </div>
+                    <div class="task-summary-text">
+                        <span><span id="completed-tasks">0</span> de <span id="total-tasks">0</span> tarefas concluídas</span>
+                        <span>Produtividade: <span id="productivity-indicator">📊</span></span>
+                    </div>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="task-quick-actions">
+                    <button class="btn-small" onclick="clearCompletedTasks()">
+                        <i class="fas fa-trash"></i> Limpar Concluídas
+                    </button>
+                    <button class="btn-small" onclick="exportTasks()">
+                        <i class="fas fa-download"></i> Exportar
+                    </button>
+                    <button class="btn-small" onclick="showTaskAnalytics()">
+                        <i class="fas fa-chart-bar"></i> Análise
+                    </button>
+                </div>
+            </div>
+
+            <!-- Productivity Stats -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-chart-line card-icon"></i>
+                    <h2 class="card-title">Estatísticas de Produtividade</h2>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-number" id="tasks-today">0</span>
+                        <span class="stat-label">Tarefas Hoje</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="focus-time">0h</span>
+                        <span class="stat-label">Tempo Focado</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="productivity-score">85%</span>
+                        <span class="stat-label">Produtividade</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="commute-time">--</span>
+                        <span class="stat-label">Tempo Trânsito</span>
+                    </div>
+                </div>
+                
+                <!-- Traffic Integration Section -->
+                <div style="margin-top: 20px;">
+                    <h4>Impacto do Trânsito na Produtividade</h4>
+                    <div id="traffic-productivity-stats" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0;">
+                        <div class="traffic-stat-card">
+                            <div class="traffic-stat-value" id="departure-time">--:--</div>
+                            <div class="traffic-stat-label">Horário de Saída</div>
+                        </div>
+                        <div class="traffic-stat-card">
+                            <div class="traffic-stat-value" id="arrival-home">--:--</div>
+                            <div class="traffic-stat-label">Chegada em Casa</div>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="productivity-progress" style="width: 75%"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.9rem; color: var(--text-secondary);">
+                        <span>Tempo Perdido: <span id="time-lost">0 min</span></span>
+                        <span>Eficiência: <span id="traffic-efficiency">85%</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Smart Suggestions -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-lightbulb card-icon"></i>
+                    <h2 class="card-title">Sugestões Inteligentes</h2>
+                </div>
+                <div id="suggestions-list">
+                    <div class="suggestion-item">
+                        <i class="fas fa-coffee suggestion-icon"></i>
+                        <div class="suggestion-text">
+                            <strong>Pausa para café</strong><br>
+                            Você está trabalhando há 2 horas. Que tal uma pausa?
+                        </div>
+                    </div>
+                    <div class="suggestion-item">
+                        <i class="fas fa-dumbbell suggestion-icon"></i>
+                        <div class="suggestion-text">
+                            <strong>Exercício rápido</strong><br>
+                            5 minutos de alongamento podem aumentar sua energia.
+                        </div>
+                    </div>
+                    <div class="suggestion-item">
+                        <i class="fas fa-book suggestion-icon"></i>
+                        <div class="suggestion-text">
+                            <strong>Leitura recomendada</strong><br>
+                            Artigo sobre produtividade baseado em seus interesses.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-bolt card-icon"></i>
+                    <h2 class="card-title">Ações Rápidas</h2>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <button class="btn btn-primary" onclick="startFocusTimer()">
+                        <i class="fas fa-play"></i> Iniciar Foco
+                    </button>
+                    <button class="btn btn-primary" onclick="takeBreak()">
+                        <i class="fas fa-pause"></i> Fazer Pausa
+                    </button>
+                    <button class="btn btn-primary" onclick="exportData()">
+                        <i class="fas fa-download"></i> Exportar Dados
+                    </button>
+                    <button class="btn btn-primary" onclick="resetDay()">
+                        <i class="fas fa-refresh"></i> Resetar Dia
+                    </button>
+                </div>
+                <div style="margin-top: 15px; text-align: center;">
+                    <button class="btn btn-primary" onclick="testTrafficSystem()" style="font-size: 0.8rem;">
+                        <i class="fas fa-route"></i> Testar Sistema de Trânsito
+                    </button>
+                </div>
+                <div id="focus-timer" style="margin-top: 20px; text-align: center; display: none;">
+                    <h3>Sessão de Foco</h3>
+                    <div style="font-size: 2rem; margin: 10px 0;" id="timer-display">25:00</div>
+                    <button class="btn btn-primary" onclick="stopFocusTimer()">Parar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer style="text-align: center; margin-top: 30px; color: var(--text-secondary);">
+            <p>&copy; 2025 Dashboard Pessoal Inteligente - Criado por Suna.so AI Agent</p>
+        </footer>
+    </div>
+
+    <script src="script.js?v=20250715"></script>
+    <script src="advanced-features.js?v=20250715"></script>
+    <script src="news-enhanced.js?v=20250715"></script>
+    <script src="weather-enhanced.js?v=20250715"></script>
+    <script src="traffic-simple.js?v=20250715"></script>
+    <script src="traffic-kpi.js?v=20250715"></script>
+    <script src="address-config.js?v=20250715"></script>
+    <script src="traffic-manager.js?v=20250715"></script>
+    <script src="traffic-notifications.js?v=20250715"></script>
+    <script src="traffic-reports.js?v=20250715"></script>
+    <script src="productivity-traffic-integration.js?v=20250715"></script>
+</body>
+</html>
