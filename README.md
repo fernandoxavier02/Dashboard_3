@@ -185,7 +185,7 @@ Este projeto foi criado pelo **Suna.so AI Agent** como demonstração de capacid
 
 ## 📄 Licença
 
-Este projeto é open-source e está disponível sob a licença MIT. Sinta-se livre para usar, modificar e distribuir conforme necessário.
+Este projeto é open-source e está disponível sob a licença MIT. Consulte o arquivo [LICENSE](LICENSE) para detalhes completos.
 
 ## 🆘 Suporte
 
