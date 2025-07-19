@@ -72,8 +72,15 @@ class TrafficReports {
             // Update averages (simplified simulation)
             stats.totalCommutes += 1;
             stats.totalTravelTime += homeToWork.duration + workToHome.duration;
-            stats.averageHomeToWork = Math.round((stats.averageHomeToWork + homeToWork.duration) / 2);
-            stats.averageWorkToHome = Math.round((stats.averageWorkToHome + workToHome.duration) / 2);
+
+            stats.averageHomeToWork = Math.round(
+                (stats.averageHomeToWork * (stats.totalCommutes - 1) + homeToWork.duration) /
+                stats.totalCommutes
+            );
+            stats.averageWorkToHome = Math.round(
+                (stats.averageWorkToHome * (stats.totalCommutes - 1) + workToHome.duration) /
+                stats.totalCommutes
+            );
             
             // Check for delays
             if (homeToWork.duration > 45 || workToHome.duration > 50) {
