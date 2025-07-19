@@ -60,7 +60,7 @@ function createTrafficWidget() {
                             <div style="font-weight: 600; color: var(--text-primary);">
                                 <i class="fas fa-home"></i> Casa → Trabalho
                             </div>
-                            <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                            <div id="route-home-work" class="route-description" style="color: var(--text-secondary); font-size: 0.9rem;">
                                 Av. Franz Voegeli → Av. Francisco Matarazzo
                             </div>
                         </div>
@@ -69,7 +69,7 @@ function createTrafficWidget() {
                                 35 min
                             </div>
                             <div style="color: var(--text-secondary); font-size: 0.8rem;">
-                                18.5 km
+                                <span id="home-to-work-distance">18.5 km</span>
                             </div>
                         </div>
                     </div>
@@ -82,7 +82,7 @@ function createTrafficWidget() {
                             <div style="font-weight: 600; color: var(--text-primary);">
                                 <i class="fas fa-building"></i> Trabalho → Casa
                             </div>
-                            <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                            <div id="route-work-home" class="route-description" style="color: var(--text-secondary); font-size: 0.9rem;">
                                 Av. Francisco Matarazzo → Av. Franz Voegeli
                             </div>
                         </div>
@@ -91,7 +91,7 @@ function createTrafficWidget() {
                                 38 min
                             </div>
                             <div style="color: var(--text-secondary); font-size: 0.8rem;">
-                                19.2 km
+                                <span id="work-to-home-distance">19.2 km</span>
                             </div>
                         </div>
                     </div>
@@ -135,7 +135,7 @@ function createTrafficWidget() {
     console.log('Widget de trânsito criado com sucesso');
 }
 
-function updateTrafficData() {
+async function updateTrafficData() {
     console.log('Atualizando dados de trânsito');
     
     const now = new Date();
@@ -150,13 +150,26 @@ function updateTrafficData() {
     if (window.addressConfig && window.addressConfig.config) {
         const config = window.addressConfig.config;
         if (config.homeAddress && config.workAddress) {
-            // Recalcular tempos baseados nos endereços configurados
-            const distance = estimateDistanceFromAddresses(config.homeAddress, config.workAddress);
-            baseHomeToWork = Math.max(15, Math.min(90, Math.round(distance * 2.5)));
-            baseWorkToHome = Math.max(15, Math.min(90, Math.round(distance * 2.8)));
-            
-            console.log(`Tempos recalculados para novos endereços: ${baseHomeToWork}min / ${baseWorkToHome}min`);
-            
+            try {
+                const hw = await window.addressConfig.fetchHereRoute(config.homeAddress, config.workAddress);
+                const wh = await window.addressConfig.fetchHereRoute(config.workAddress, config.homeAddress);
+                baseHomeToWork = Math.round(hw.duration);
+                baseWorkToHome = Math.round(wh.duration);
+                const distElem1 = document.getElementById('home-to-work-distance');
+                const distElem2 = document.getElementById('work-to-home-distance');
+                if (distElem1) distElem1.textContent = `${hw.distance.toFixed(1)} km`;
+                if (distElem2) distElem2.textContent = `${wh.distance.toFixed(1)} km`;
+            } catch (err) {
+                console.error('HERE API error:', err);
+                const distance = estimateDistanceFromAddresses(config.homeAddress, config.workAddress);
+                baseHomeToWork = Math.max(15, Math.min(90, Math.round(distance * 2.5)));
+                baseWorkToHome = Math.max(15, Math.min(90, Math.round(distance * 2.8)));
+                const distElem1 = document.getElementById('home-to-work-distance');
+                const distElem2 = document.getElementById('work-to-home-distance');
+                if (distElem1) distElem1.textContent = `${distance.toFixed(1)} km`;
+                if (distElem2) distElem2.textContent = `${(distance * 1.1).toFixed(1)} km`;
+            }
+
             // Atualizar descrições das rotas no card
             updateRouteDescriptions(config.homeAddress, config.workAddress);
         }
@@ -171,11 +184,12 @@ function updateRouteDescriptions(homeAddress, workAddress) {
     const widget = document.getElementById('traffic-widget-simple');
     if (!widget) return;
     
-    const routeDescriptions = widget.querySelectorAll('.text-secondary');
-    
-    if (routeDescriptions.length >= 2) {
-        routeDescriptions[0].textContent = `${getShortAddress(homeAddress)} → ${getShortAddress(workAddress)}`;
-        routeDescriptions[1].textContent = `${getShortAddress(workAddress)} → ${getShortAddress(homeAddress)}`;
+    const homeWorkDesc = document.getElementById('route-home-work');
+    const workHomeDesc = document.getElementById('route-work-home');
+
+    if (homeWorkDesc && workHomeDesc) {
+        homeWorkDesc.textContent = `${getShortAddress(homeAddress)} → ${getShortAddress(workAddress)}`;
+        workHomeDesc.textContent = `${getShortAddress(workAddress)} → ${getShortAddress(homeAddress)}`;
     }
 }
 
