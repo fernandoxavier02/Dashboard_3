@@ -357,14 +357,15 @@ class AddressConfig {
         if (!widget) return;
         
         // Encontrar e atualizar as descrições das rotas
-        const routeDescriptions = widget.querySelectorAll('.text-secondary');
-        
-        if (routeDescriptions.length >= 2) {
+        const homeWorkDesc = document.getElementById('route-home-work');
+        const workHomeDesc = document.getElementById('route-work-home');
+
+        if (homeWorkDesc && workHomeDesc) {
             // Primeira rota: Casa → Trabalho
-            routeDescriptions[0].textContent = `${this.getShortAddress(this.config.homeAddress)} → ${this.getShortAddress(this.config.workAddress)}`;
-            
+            homeWorkDesc.textContent = `${this.getShortAddress(this.config.homeAddress)} → ${this.getShortAddress(this.config.workAddress)}`;
+
             // Segunda rota: Trabalho → Casa
-            routeDescriptions[1].textContent = `${this.getShortAddress(this.config.workAddress)} → ${this.getShortAddress(this.config.homeAddress)}`;
+            workHomeDesc.textContent = `${this.getShortAddress(this.config.workAddress)} → ${this.getShortAddress(this.config.homeAddress)}`;
         }
         
         // Atualizar recomendações com novos horários
