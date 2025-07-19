@@ -59,6 +59,7 @@ Um assistente completo para organização e produtividade diária, criado com te
 - **Estimativas de tempo** atualizadas
 - **Status visual** (normal, lento, congestionado)
 - **Integração com planejamento** do dia
+- **KPI de atraso e eficiência** com previsão de tendência
 
 ### 📈 Analytics Avançado
 - **Tracking de comportamento** e padrões de uso
