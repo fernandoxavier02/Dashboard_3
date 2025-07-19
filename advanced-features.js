@@ -23,6 +23,7 @@ class AdvancedFeatures {
         this.loadTrafficData();
         this.setupKeyboardShortcuts();
         this.addAdvancedAnalytics();
+        this.setupThemeToggle();
         
         // Update traffic data every hour
         setInterval(() => this.loadTrafficData(), 60 * 60 * 1000);
