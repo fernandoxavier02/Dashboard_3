@@ -236,6 +236,7 @@ class TrafficIntensityKPI {
         const gaugeElement = document.getElementById('kpi-gauge-fill');
         const valueElement = document.getElementById('kpi-main-value');
         const statusElement = document.getElementById('kpi-status');
+        const pointerElement = document.getElementById('kpi-pointer');
 
         if (!gaugeElement || !valueElement || !statusElement) return;
 
@@ -244,6 +245,13 @@ class TrafficIntensityKPI {
         // Atualizar gauge
         const percentage = intensity;
         gaugeElement.style.transform = `rotate(${(percentage / 100) * 180}deg)`;
+
+        if (pointerElement) {
+            const angle = (percentage / 100) * 180 - 90;
+            pointerElement.style.transform = `rotate(${angle}deg)`;
+            const hue = 120 - (percentage * 1.2);
+            pointerElement.style.background = `hsl(${hue}, 80%, 50%)`;
+        }
         
         // Atualizar cor baseada na intensidade
         let color = 'var(--success-color)';
@@ -510,6 +518,41 @@ class TrafficIntensityKPI {
                 font-size: 0.9rem;
                 font-weight: 600;
                 color: var(--text-primary);
+            }
+
+            .kpi-pointer-container {
+                position: relative;
+                height: 60px;
+                margin-top: 10px;
+            }
+
+            .kpi-pointer {
+                position: absolute;
+                bottom: 0;
+                left: 50%;
+                width: 4px;
+                height: 50px;
+                background: var(--success-color);
+                transform-origin: bottom center;
+                transform: rotate(-90deg);
+                transition: transform 0.5s ease, background 0.5s ease;
+                border-radius: 2px;
+            }
+
+            .kpi-scale {
+                position: absolute;
+                bottom: -15px;
+                left: 0;
+                width: 100%;
+                height: 15px;
+            }
+
+            .kpi-scale-label {
+                position: absolute;
+                bottom: 0;
+                font-size: 0.7rem;
+                transform: translateX(-50%);
+                color: var(--text-secondary);
             }
             
             .kpi-routes {
