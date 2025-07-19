@@ -321,15 +321,23 @@ class AddressConfig {
         // Atualizar widget simples
         const homeToWorkTime = document.getElementById('home-to-work-time');
         const workToHomeTime = document.getElementById('work-to-home-time');
+        const homeToWorkDistance = document.getElementById('home-to-work-distance');
+        const workToHomeDistance = document.getElementById('work-to-home-distance');
         
         if (homeToWorkTime) {
             homeToWorkTime.textContent = `${newTrafficData.homeToWork.duration} min`;
             homeToWorkTime.style.color = newTrafficData.homeToWork.condition.color;
         }
+        if (homeToWorkDistance) {
+            homeToWorkDistance.textContent = newTrafficData.homeToWork.distance;
+        }
         
         if (workToHomeTime) {
             workToHomeTime.textContent = `${newTrafficData.workToHome.duration} min`;
             workToHomeTime.style.color = newTrafficData.workToHome.condition.color;
+        }
+        if (workToHomeDistance) {
+            workToHomeDistance.textContent = newTrafficData.workToHome.distance;
         }
         
         // Atualizar descrições das rotas

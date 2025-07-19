@@ -69,7 +69,7 @@ function createTrafficWidget() {
                                 35 min
                             </div>
                             <div style="color: var(--text-secondary); font-size: 0.8rem;">
-                                18.5 km
+                                <span id="home-to-work-distance">18.5 km</span>
                             </div>
                         </div>
                     </div>
@@ -91,7 +91,7 @@ function createTrafficWidget() {
                                 38 min
                             </div>
                             <div style="color: var(--text-secondary); font-size: 0.8rem;">
-                                19.2 km
+                                <span id="work-to-home-distance">19.2 km</span>
                             </div>
                         </div>
                     </div>
@@ -156,9 +156,15 @@ function updateTrafficData() {
             baseWorkToHome = Math.max(15, Math.min(90, Math.round(distance * 2.8)));
             
             console.log(`Tempos recalculados para novos endereços: ${baseHomeToWork}min / ${baseWorkToHome}min`);
-            
+
             // Atualizar descrições das rotas no card
             updateRouteDescriptions(config.homeAddress, config.workAddress);
+
+            // Atualizar distâncias exibidas
+            const distElem1 = document.getElementById('home-to-work-distance');
+            const distElem2 = document.getElementById('work-to-home-distance');
+            if (distElem1) distElem1.textContent = `${distance.toFixed(1)} km`;
+            if (distElem2) distElem2.textContent = `${(distance * 1.1).toFixed(1)} km`;
         }
     }
     
