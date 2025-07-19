@@ -156,7 +156,7 @@ class PersonalDashboard {
         
         if (weather.temperature < 15) {
             suggestions.push({
-                icon: 'fas fa-jacket',
+                icon: 'fas fa-temperature-low',
                 title: 'Agasalho',
                 text: 'Está frio! Não esqueça de se agasalhar ao sair.'
             });
