@@ -321,15 +321,23 @@ class AddressConfig {
         // Atualizar widget simples
         const homeToWorkTime = document.getElementById('home-to-work-time');
         const workToHomeTime = document.getElementById('work-to-home-time');
+        const homeToWorkDistance = document.getElementById('home-to-work-distance');
+        const workToHomeDistance = document.getElementById('work-to-home-distance');
         
         if (homeToWorkTime) {
             homeToWorkTime.textContent = `${newTrafficData.homeToWork.duration} min`;
             homeToWorkTime.style.color = newTrafficData.homeToWork.condition.color;
         }
+        if (homeToWorkDistance) {
+            homeToWorkDistance.textContent = newTrafficData.homeToWork.distance;
+        }
         
         if (workToHomeTime) {
             workToHomeTime.textContent = `${newTrafficData.workToHome.duration} min`;
             workToHomeTime.style.color = newTrafficData.workToHome.condition.color;
+        }
+        if (workToHomeDistance) {
+            workToHomeDistance.textContent = newTrafficData.workToHome.distance;
         }
         
         // Atualizar descrições das rotas
@@ -357,14 +365,15 @@ class AddressConfig {
         if (!widget) return;
         
         // Encontrar e atualizar as descrições das rotas
-        const routeDescriptions = widget.querySelectorAll('.text-secondary');
-        
-        if (routeDescriptions.length >= 2) {
+        const homeWorkDesc = document.getElementById('route-home-work');
+        const workHomeDesc = document.getElementById('route-work-home');
+
+        if (homeWorkDesc && workHomeDesc) {
             // Primeira rota: Casa → Trabalho
-            routeDescriptions[0].textContent = `${this.getShortAddress(this.config.homeAddress)} → ${this.getShortAddress(this.config.workAddress)}`;
-            
+            homeWorkDesc.textContent = `${this.getShortAddress(this.config.homeAddress)} → ${this.getShortAddress(this.config.workAddress)}`;
+
             // Segunda rota: Trabalho → Casa
-            routeDescriptions[1].textContent = `${this.getShortAddress(this.config.workAddress)} → ${this.getShortAddress(this.config.homeAddress)}`;
+            workHomeDesc.textContent = `${this.getShortAddress(this.config.workAddress)} → ${this.getShortAddress(this.config.homeAddress)}`;
         }
         
         // Atualizar recomendações com novos horários
