@@ -641,9 +641,9 @@ class PersonalDashboard {
         ));
         
         // Integrate traffic data into productivity calculations
-        this.updateTrafficProductivityStats(baseProductivityScore);
-        
-        document.getElementById('productivity-score').textContent = `${baseProductivityScore}%`;
+        const finalScore = this.updateTrafficProductivityStats(baseProductivityScore);
+
+        document.getElementById('productivity-score').textContent = `${finalScore}%`;
     }
 
     updateTrafficProductivityStats(baseScore) {
@@ -712,6 +712,7 @@ class PersonalDashboard {
             
             // Update productivity score with traffic consideration
             document.getElementById('productivity-score').textContent = `${adjustedScore}%`;
+            return adjustedScore;
             
         } else {
             // Default values when traffic data is not available
@@ -721,6 +722,7 @@ class PersonalDashboard {
             document.getElementById('time-lost').textContent = '0 min';
             document.getElementById('traffic-efficiency').textContent = '85%';
             document.getElementById('productivity-progress').style.width = `${baseScore}%`;
+            return baseScore;
         }
     }
 
