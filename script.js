@@ -628,11 +628,11 @@ class PersonalDashboard {
         
         // Update productivity stats
         const today = new Date().toDateString();
-        const tasksToday = this.tasks.filter(t => 
+        const tasksToday = this.tasks.filter(t =>
             new Date(t.createdAt).toDateString() === today
         ).length;
-        
-        document.getElementById('tasks-today').textContent = tasksToday;
+
+        document.getElementById('stats-tasks-today').textContent = tasksToday;
         document.getElementById('focus-time').textContent = `${Math.floor(this.focusTime / 60)}h`;
         
         // Calculate productivity score based on completed tasks and focus time
