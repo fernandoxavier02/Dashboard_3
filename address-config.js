@@ -40,14 +40,14 @@ class AddressConfig {
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                
+
                 <div class="config-modal-body">
                     <div class="config-section">
                         <label for="home-address">🏠 Endereço Residencial:</label>
                         <input type="text" id="home-address" placeholder="Ex: Rua das Flores, 123, Bairro, Cidade, SP">
                         <small>Endereço completo de onde você mora</small>
                     </div>
-                    
+
                     <div class="config-section">
                         <label for="work-address">🏢 Endereço do Trabalho:</label>
                         <input type="text" id="work-address" placeholder="Ex: Av. Paulista, 1000, Centro, São Paulo, SP">
@@ -87,6 +87,12 @@ class AddressConfig {
                             <label for="weather-integration">Considerar impacto do clima</label>
                         </div>
                     </div>
+
+                    <div class="config-section">
+                        <label for="google-api-key">🔑 Google Maps API Key:</label>
+                        <input type="text" id="google-api-key" placeholder="Chave da API (opcional)">
+                        <small>Usada para validar endereços e calcular rotas reais</small>
+                    </div>
                 </div>
                 
                 <div class="config-modal-footer">
@@ -116,7 +122,8 @@ class AddressConfig {
         document.getElementById('weekend-mode').checked = this.config.weekendMode || false;
         document.getElementById('notifications-enabled').checked = this.config.notificationsEnabled !== false;
         document.getElementById('weather-integration').checked = this.config.weatherIntegration !== false;
-        
+        document.getElementById('google-api-key').value = this.config.googleApiKey || '';
+
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
     }
@@ -127,7 +134,7 @@ class AddressConfig {
         document.body.style.overflow = 'auto';
     }
 
-    saveConfig() {
+    async saveConfig() {
         // Coletar dados do formulário
         const newConfig = {
             homeAddress: document.getElementById('home-address').value.trim(),
@@ -138,21 +145,30 @@ class AddressConfig {
             weekendMode: document.getElementById('weekend-mode').checked,
             notificationsEnabled: document.getElementById('notifications-enabled').checked,
             weatherIntegration: document.getElementById('weather-integration').checked,
+            googleApiKey: document.getElementById('google-api-key').value.trim(),
             lastUpdated: new Date().toISOString()
         };
-        
+
         // Validar campos obrigatórios
         if (!newConfig.homeAddress || !newConfig.workAddress) {
             alert('⚠️ Por favor, preencha os endereços residencial e do trabalho.');
             return;
         }
-        
+
+        // Validar endereços via Google quando possível
+        const homeOk = await this.validateAddress(newConfig.homeAddress);
+        const workOk = await this.validateAddress(newConfig.workAddress);
+        if (!homeOk || !workOk) {
+            alert('Não foi possível validar um dos endereços. Verifique e tente novamente.');
+            return;
+        }
+
         // Salvar configuração
         this.config = newConfig;
         localStorage.setItem('traffic-address-config', JSON.stringify(this.config));
-        
+
         // Atualizar sistema de trânsito
-        this.updateTrafficSystem();
+        await this.updateTrafficSystem();
         
         // Fechar modal
         this.closeConfigModal();
@@ -169,7 +185,7 @@ class AddressConfig {
         }
     }
 
-    updateTrafficSystem() {
+    async updateTrafficSystem() {
         // Atualizar sistema de trânsito com novos endereços
         if (window.trafficManager) {
             window.trafficManager.homeAddress = this.config.homeAddress;
@@ -188,7 +204,7 @@ class AddressConfig {
         }
         
         // Recalcular dados de trânsito baseados nos novos endereços
-        this.recalculateTrafficTimes();
+        await this.recalculateTrafficTimes();
         
         // Atualizar integração produtividade-trânsito
         if (window.productivityTrafficIntegration) {
@@ -196,24 +212,33 @@ class AddressConfig {
         }
     }
 
-    recalculateTrafficTimes() {
-        // Simular novos tempos baseados nos endereços configurados
-        const newTrafficData = this.calculateTrafficForNewAddresses();
-        
+    async recalculateTrafficTimes() {
+        // Calcular novos tempos de forma assíncrona
+        const newTrafficData = await this.calculateTrafficForNewAddresses();
+
         // Atualizar displays com novos tempos
         this.updateTrafficDisplays(newTrafficData);
-        
+
         // Notificar outros sistemas sobre a mudança
         this.notifySystemsOfChange(newTrafficData);
     }
 
-    calculateTrafficForNewAddresses() {
-        // Calcular distância aproximada baseada nos endereços
-        const distance = this.estimateDistance(this.config.homeAddress, this.config.workAddress);
-        
+    async calculateTrafficForNewAddresses() {
+        // Se possuir chave da API do Google, usar dados reais
+        let distance = this.estimateDistance(this.config.homeAddress, this.config.workAddress);
+        let duration = distance * 2.5;
+
+        if (this.config.googleApiKey) {
+            const real = await this.fetchDistanceFromGoogle(this.config.homeAddress, this.config.workAddress);
+            if (real) {
+                distance = real.distance;
+                duration = real.duration;
+            }
+        }
+
         // Calcular tempos base baseados na distância
-        const baseHomeToWork = Math.max(15, Math.min(90, Math.round(distance * 2.5))); // ~2.5 min por km
-        const baseWorkToHome = Math.max(15, Math.min(90, Math.round(distance * 2.8))); // Ligeiramente mais longo
+        const baseHomeToWork = Math.max(15, Math.min(90, Math.round(duration)));
+        const baseWorkToHome = Math.max(15, Math.min(90, Math.round(duration * 1.1)));
         
         // Aplicar variações baseadas no horário atual
         const now = new Date();
@@ -448,6 +473,35 @@ class AddressConfig {
         return Math.round(baseTime * multiplier);
     }
 
+    async validateAddress(address) {
+        if (!this.config.googleApiKey) return true;
+        try {
+            const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${this.config.googleApiKey}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            return data.status === 'OK' && data.results.length > 0;
+        } catch (e) {
+            console.error('Erro ao validar endereço:', e);
+            return false;
+        }
+    }
+
+    async fetchDistanceFromGoogle(origin, destination) {
+        if (!this.config.googleApiKey) return null;
+        try {
+            const url = `https://maps.googleapis.com/maps/api/distancematrix/json?units=metric&origins=${encodeURIComponent(origin)}&destinations=${encodeURIComponent(destination)}&key=${this.config.googleApiKey}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data.status === 'OK' && data.rows[0] && data.rows[0].elements[0].status === 'OK') {
+                const el = data.rows[0].elements[0];
+                return { distance: el.distance.value / 1000, duration: el.duration.value / 60 };
+            }
+        } catch (e) {
+            console.error('Erro ao consultar Google Maps:', e);
+        }
+        return null;
+    }
+
     getShortAddress(fullAddress) {
         if (!fullAddress) return 'Não configurado';
         
@@ -652,7 +706,8 @@ class AddressConfig {
             commuteBuffer: 5,
             weekendMode: false,
             notificationsEnabled: true,
-            weatherIntegration: true
+            weatherIntegration: true,
+            googleApiKey: ''
         };
     }
 
