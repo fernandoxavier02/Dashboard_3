@@ -140,6 +140,8 @@ Edite as variáveis CSS em `style.css`:
 ### Integrar APIs Externas
 - **Substitua dados simulados** por chamadas reais de API
 - **Adicione chaves de API** nas configurações
+- **Campo "Google Maps API Key"** disponível no menu de endereços
+- **Campo "HERE API Key"** disponível como alternativa
 - **Implemente tratamento de erros** robusto
 - **Configure CORS** se necessário
 
