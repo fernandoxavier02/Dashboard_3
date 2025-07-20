@@ -127,7 +127,7 @@ class AddressConfig {
         document.body.style.overflow = 'auto';
     }
 
-    saveConfig() {
+    async saveConfig() {
         // Coletar dados do formulário
         const newConfig = {
             homeAddress: document.getElementById('home-address').value.trim(),
@@ -152,7 +152,7 @@ class AddressConfig {
         localStorage.setItem('traffic-address-config', JSON.stringify(this.config));
         
         // Atualizar sistema de trânsito
-        this.updateTrafficSystem();
+        await this.updateTrafficSystem();
         
         // Fechar modal
         this.closeConfigModal();
@@ -169,7 +169,7 @@ class AddressConfig {
         }
     }
 
-    updateTrafficSystem() {
+    async updateTrafficSystem() {
         // Atualizar sistema de trânsito com novos endereços
         if (window.trafficManager) {
             window.trafficManager.homeAddress = this.config.homeAddress;
@@ -188,23 +188,47 @@ class AddressConfig {
         }
         
         // Recalcular dados de trânsito baseados nos novos endereços
-        this.recalculateTrafficTimes();
-        
+        await this.recalculateTrafficTimes();
+
+        // Garantir que o widget simples seja atualizado imediatamente
+        if (window.updateTrafficData) {
+            window.updateTrafficData();
+        }
+
         // Atualizar integração produtividade-trânsito
         if (window.productivityTrafficIntegration) {
             window.productivityTrafficIntegration.updateIntegration();
         }
     }
 
-    recalculateTrafficTimes() {
-        // Simular novos tempos baseados nos endereços configurados
-        const newTrafficData = this.calculateTrafficForNewAddresses();
-        
-        // Atualizar displays com novos tempos
-        this.updateTrafficDisplays(newTrafficData);
-        
-        // Notificar outros sistemas sobre a mudança
-        this.notifySystemsOfChange(newTrafficData);
+    async recalculateTrafficTimes() {
+        try {
+            const homeToWork = await this.fetchHereRoute(this.config.homeAddress, this.config.workAddress);
+            const workToHome = await this.fetchHereRoute(this.config.workAddress, this.config.homeAddress);
+
+            const newTrafficData = {
+                homeToWork: {
+                    duration: Math.round(homeToWork.duration),
+                    distance: `${homeToWork.distance.toFixed(1)} km`,
+                    route: this.generateRouteName(this.config.homeAddress, this.config.workAddress),
+                    condition: this.getConditionFromMultiplier(1)
+                },
+                workToHome: {
+                    duration: Math.round(workToHome.duration),
+                    distance: `${workToHome.distance.toFixed(1)} km`,
+                    route: this.generateRouteName(this.config.workAddress, this.config.homeAddress),
+                    condition: this.getConditionFromMultiplier(1)
+                }
+            };
+
+            this.updateTrafficDisplays(newTrafficData);
+            this.notifySystemsOfChange(newTrafficData);
+        } catch (err) {
+            console.error('Erro ao consultar HERE API:', err);
+            const newTrafficData = this.calculateTrafficForNewAddresses();
+            this.updateTrafficDisplays(newTrafficData);
+            this.notifySystemsOfChange(newTrafficData);
+        }
     }
 
     calculateTrafficForNewAddresses() {
@@ -321,15 +345,23 @@ class AddressConfig {
         // Atualizar widget simples
         const homeToWorkTime = document.getElementById('home-to-work-time');
         const workToHomeTime = document.getElementById('work-to-home-time');
+        const homeToWorkDistance = document.getElementById('home-to-work-distance');
+        const workToHomeDistance = document.getElementById('work-to-home-distance');
         
         if (homeToWorkTime) {
             homeToWorkTime.textContent = `${newTrafficData.homeToWork.duration} min`;
             homeToWorkTime.style.color = newTrafficData.homeToWork.condition.color;
         }
+        if (homeToWorkDistance) {
+            homeToWorkDistance.textContent = newTrafficData.homeToWork.distance;
+        }
         
         if (workToHomeTime) {
             workToHomeTime.textContent = `${newTrafficData.workToHome.duration} min`;
             workToHomeTime.style.color = newTrafficData.workToHome.condition.color;
+        }
+        if (workToHomeDistance) {
+            workToHomeDistance.textContent = newTrafficData.workToHome.distance;
         }
         
         // Atualizar descrições das rotas
@@ -357,14 +389,15 @@ class AddressConfig {
         if (!widget) return;
         
         // Encontrar e atualizar as descrições das rotas
-        const routeDescriptions = widget.querySelectorAll('.text-secondary');
-        
-        if (routeDescriptions.length >= 2) {
+        const homeWorkDesc = document.getElementById('route-home-work');
+        const workHomeDesc = document.getElementById('route-work-home');
+
+        if (homeWorkDesc && workHomeDesc) {
             // Primeira rota: Casa → Trabalho
-            routeDescriptions[0].textContent = `${this.getShortAddress(this.config.homeAddress)} → ${this.getShortAddress(this.config.workAddress)}`;
-            
+            homeWorkDesc.textContent = `${this.getShortAddress(this.config.homeAddress)} → ${this.getShortAddress(this.config.workAddress)}`;
+
             // Segunda rota: Trabalho → Casa
-            routeDescriptions[1].textContent = `${this.getShortAddress(this.config.workAddress)} → ${this.getShortAddress(this.config.homeAddress)}`;
+            workHomeDesc.textContent = `${this.getShortAddress(this.config.workAddress)} → ${this.getShortAddress(this.config.homeAddress)}`;
         }
         
         // Atualizar recomendações com novos horários
@@ -437,6 +470,31 @@ class AddressConfig {
         }
         
         return Math.round(baseTime * multiplier);
+    }
+
+    async fetchHereRoute(originAddress, destinationAddress) {
+        const apiKey = window.HERE_API_KEY;
+        if (!apiKey) throw new Error('HERE API key não configurada');
+
+        const geocode = async addr => {
+            const resp = await fetch(`https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(addr)}&apikey=${apiKey}`);
+            const data = await resp.json();
+            if (!data.items || !data.items.length) throw new Error('Geocoding falhou');
+            return data.items[0].position;
+        };
+
+        const originPos = await geocode(originAddress);
+        const destPos = await geocode(destinationAddress);
+
+        const routeResp = await fetch(`https://router.hereapi.com/v8/routes?transportMode=car&origin=${originPos.lat},${originPos.lng}&destination=${destPos.lat},${destPos.lng}&return=summary&apikey=${apiKey}`);
+        const routeData = await routeResp.json();
+        const summary = routeData.routes?.[0]?.sections?.[0]?.summary;
+        if (!summary) throw new Error('Rota não encontrada');
+
+        return {
+            distance: summary.length / 1000,
+            duration: summary.baseDuration / 60
+        };
     }
 
     getShortAddress(fullAddress) {
